@@ -1,0 +1,6 @@
+{
+  "name": "Cockpit de Inteligência Educacional",
+  "description": "Painel executivo de inteligência educacional para Secretarias Municipais de Educação com monitoramento de KPIs, metas, alertas, planos de ação e modo TV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

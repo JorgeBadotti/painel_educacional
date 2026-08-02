@@ -1,0 +1,23 @@
+[
+  {
+    "id": "hl_1",
+    "title": "Escola Maria de Lourdes teve aumento de 18% na proficiência em Matemática",
+    "description": "Resultado expressivo após adoção de oficinas de jogos matemáticos no contraturno.",
+    "category": "aprendizagem",
+    "icon": "trending-up"
+  },
+  {
+    "id": "hl_2",
+    "title": "Escola Bom Futuro atingiu 96% de frequência este mês",
+    "description": "Destaque municipal na frequência com plano comunitário de engajamento familiar.",
+    "category": "permanencia",
+    "icon": "award"
+  },
+  {
+    "id": "hl_3",
+    "title": "uso de tecnologia cresceu 12% entre os professores",
+    "description": "Engajamento recorde em ferramentas interativas após formação continuada em abril.",
+    "category": "tecnologia",
+    "icon": "zap"
+  }
+]

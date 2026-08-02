@@ -1,0 +1,245 @@
+[
+  {
+    "indicatorId": "ind_ideb",
+    "name": "IDEB",
+    "subtitle": "Anos Iniciais e Finais",
+    "category": "aprendizagem",
+    "icon": "award",
+    "unit": "pts",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 4.4 },
+      { "period": "Ano -2", "value": 4.5 },
+      { "period": "Ano -1", "value": 4.6 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 4.8 },
+      { "period": "Ano 2", "value": 5.0 },
+      { "period": "Ano 3", "value": 5.2 }
+    ],
+    "currentValue": 5.2,
+    "annualTarget": 6.0,
+    "excellenceTarget": 6.5,
+    "status": "evolving",
+    "trend": "up",
+    "description": "Índice de Desenvolvimento da Educação Básica combinando taxa de aprovação e médias de desempenho em exames padronizados.",
+    "recommendedAction": "Manter programas de reforço escolar focado em matemática e língua portuguesa nos anos finais."
+  },
+  {
+    "indicatorId": "ind_alfabetizacao",
+    "name": "ALFABETIZAÇÃO",
+    "subtitle": "Na idade certa",
+    "category": "aprendizagem",
+    "icon": "book-open",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 58 },
+      { "period": "Ano -2", "value": 60 },
+      { "period": "Ano -1", "value": 62 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 65 },
+      { "period": "Ano 2", "value": 69 },
+      { "period": "Ano 3", "value": 74 }
+    ],
+    "currentValue": 74,
+    "annualTarget": 85,
+    "excellenceTarget": 95,
+    "status": "attention",
+    "trend": "up",
+    "description": "Percentual de alunos alfabetizados até o final do 2º ano do ensino fundamental.",
+    "recommendedAction": "Acelerar formação contínua de alfabetizadores e acompanhamento quinzenal por agrupamento de leitura."
+  },
+  {
+    "indicatorId": "ind_frequencia",
+    "name": "FREQUÊNCIA ESCOLAR",
+    "subtitle": "Presença diária média",
+    "category": "permanencia",
+    "icon": "calendar-check",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 86 },
+      { "period": "Ano -2", "value": 87 },
+      { "period": "Ano -1", "value": 86 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 88 },
+      { "period": "Ano 2", "value": 90 },
+      { "period": "Ano 3", "value": 91 }
+    ],
+    "currentValue": 91,
+    "annualTarget": 95,
+    "excellenceTarget": 97,
+    "status": "attention",
+    "trend": "up",
+    "description": "Taxa média de frequência dos estudantes registrada diariamente via Diário de Classe Digital.",
+    "recommendedAction": "Acionar busca ativa imediata ao atingir 3 faltas consecutivas via sistema de alertas automáticos."
+  },
+  {
+    "indicatorId": "ind_abandono",
+    "name": "TAXA DE ABANDONO",
+    "subtitle": "Evasão escolar",
+    "category": "permanencia",
+    "icon": "user-minus",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "lower_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 6.2 },
+      { "period": "Ano -2", "value": 5.9 },
+      { "period": "Ano -1", "value": 5.4 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 4.8 },
+      { "period": "Ano 2", "value": 4.3 },
+      { "period": "Ano 3", "value": 4.1 }
+    ],
+    "currentValue": 4.1,
+    "annualTarget": 2.0,
+    "excellenceTarget": 1.5,
+    "status": "attention",
+    "trend": "down",
+    "description": "Porcentagem de alunos matriculados que deixaram de frequentar a escola durante o ano letivo.",
+    "recommendedAction": "Intensificar programas de mentoria com assistência social e tutoria pedagógica direcionada."
+  },
+  {
+    "indicatorId": "ind_aprovacao",
+    "name": "TAXA DE APROVAÇÃO",
+    "subtitle": "Rendimento escolar",
+    "category": "aprendizagem",
+    "icon": "check-circle",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 82 },
+      { "period": "Ano -2", "value": 83 },
+      { "period": "Ano -1", "value": 84 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 85 },
+      { "period": "Ano 2", "value": 86 },
+      { "period": "Ano 3", "value": 87.6 }
+    ],
+    "currentValue": 87.6,
+    "annualTarget": 94,
+    "excellenceTarget": 96,
+    "status": "attention",
+    "trend": "up",
+    "description": "Taxa de alunos aprovados ao término do ano letivo regular em todas as séries.",
+    "recommendedAction": "Oferecer aulas de recuperação paralela contínua no contraturno escolar."
+  },
+  {
+    "indicatorId": "ind_distorcao",
+    "name": "DISTORÇÃO IDADE-SÉRIE",
+    "subtitle": "Atraso escolar ≥ 2 anos",
+    "category": "permanencia",
+    "icon": "alert-triangle",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "lower_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 22 },
+      { "period": "Ano -2", "value": 20 },
+      { "period": "Ano -1", "value": 19 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 17 },
+      { "period": "Ano 2", "value": 16 },
+      { "period": "Ano 3", "value": 18 }
+    ],
+    "currentValue": 18,
+    "annualTarget": 10,
+    "excellenceTarget": 8,
+    "status": "critical",
+    "trend": "up",
+    "description": "Proporção de estudantes com idade superior à recomendada para a série em pelo menos dois anos.",
+    "recommendedAction": "Expandir turmas de correção de fluxo idade-série e aceleração da aprendizagem."
+  },
+  {
+    "indicatorId": "ind_formacao",
+    "name": "FORMAÇÃO DOCENTE",
+    "subtitle": "(% professores capacitados)",
+    "category": "professores",
+    "icon": "graduation-cap",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 45 },
+      { "period": "Ano -2", "value": 48 },
+      { "period": "Ano -1", "value": 52 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 56 },
+      { "period": "Ano 2", "value": 59 },
+      { "period": "Ano 3", "value": 62 }
+    ],
+    "currentValue": 62,
+    "annualTarget": 90,
+    "excellenceTarget": 100,
+    "status": "attention",
+    "trend": "up",
+    "description": "Percentual do corpo docente com participação concluída nas formações continuadas da Secretaria.",
+    "recommendedAction": "Disponibilizar módulos EAD assíncronos com horas complementares reconhecidas."
+  },
+  {
+    "indicatorId": "ind_tecnologia",
+    "name": "USO DE TECNOLOGIA",
+    "subtitle": "(% professores ativos)",
+    "category": "tecnologia",
+    "icon": "laptop",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 28 },
+      { "period": "Ano -2", "value": 32 },
+      { "period": "Ano -1", "value": 36 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 42 },
+      { "period": "Ano 2", "value": 45 },
+      { "period": "Ano 3", "value": 48 }
+    ],
+    "currentValue": 48,
+    "annualTarget": 80,
+    "excellenceTarget": 95,
+    "status": "attention",
+    "trend": "up",
+    "description": "Percentual de professores utilizando recursos tecnológicos e plataformas digitais nas aulas semanais.",
+    "recommendedAction": "Fornecer oficinas práticas nas escolas sobre uso de plataformas digitais no planejamento pedagógico."
+  },
+  {
+    "indicatorId": "ind_financeiro",
+    "name": "EXECUÇÃO FINANCEIRA",
+    "subtitle": "(RECURSOS EDUCATIVOS)",
+    "category": "financeiro",
+    "icon": "dollar-sign",
+    "unit": "%",
+    "decimals": 1,
+    "direction": "higher_is_better",
+    "historicalSeries": [
+      { "period": "Ano -3", "value": 68 },
+      { "period": "Ano -2", "value": 72 },
+      { "period": "Ano -1", "value": 74 }
+    ],
+    "postImplementationSeries": [
+      { "period": "Ano 1", "value": 78 },
+      { "period": "Ano 2", "value": 82 },
+      { "period": "Ano 3", "value": 85 }
+    ],
+    "currentValue": 85,
+    "annualTarget": 95,
+    "excellenceTarget": 100,
+    "status": "evolving",
+    "trend": "up",
+    "description": "Execução orçamentária de verbas descentralizadas (PDDE, PNAE, FUNDEB) na rede municipal.",
+    "recommendedAction": "Apoiar diretores na prestação de contas dos saldos PDDE pendentes antes do prazo quadrimestral."
+  }
+]
