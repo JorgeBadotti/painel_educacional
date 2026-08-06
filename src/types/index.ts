@@ -1,4 +1,8 @@
-export type IndicatorCategory =
+export type RiskLevel = 'destaque' | 'atencao' | 'critico';
+
+export type TeachingStage = 'todas' | 'educacao_infantil' | 'anos_iniciais' | 'anos_finais' | 'eja';
+
+export type KpiCategory = 
   | 'visao_geral'
   | 'aprendizagem'
   | 'permanencia'
@@ -9,111 +13,125 @@ export type IndicatorCategory =
   | 'financeiro'
   | 'inclusao';
 
-export type IndicatorStatus = 'evolving' | 'attention' | 'critical' | 'on_target';
-export type IndicatorTrend = 'up' | 'down' | 'stable';
-
-export interface IndicatorSeriesPoint {
-  period: string;
+export interface HistoricalPoint {
+  period: string; // e.g. '2021', '2022', '2023', '2024.1', '2024.2', '2025'
   value: number;
+  isAfterImplementation?: boolean;
 }
 
-export interface Indicator {
-  indicatorId: string;
+export interface KpiIndicator {
+  id: string;
   name: string;
-  subtitle?: string | null;
-  category: IndicatorCategory;
-  icon: string;
-  unit: string;
-  decimals?: number;
-  direction: 'higher_is_better' | 'lower_is_better';
-  historicalSeries: IndicatorSeriesPoint[];
-  postImplementationSeries: IndicatorSeriesPoint[];
+  category: KpiCategory;
+  unit: '%' | 'pts' | 'R$' | 'unid' | 'ratio';
+  subtitle?: string;
+  historyBefore: HistoricalPoint[]; // 3 historical points before system
+  historyAfter: HistoricalPoint[];  // 3 historical points after system
   currentValue: number;
-  annualTarget: number;
-  excellenceTarget: number;
-  status: IndicatorStatus;
-  trend: IndicatorTrend;
-  description?: string;
-  recommendedAction?: string;
-  updatedAt?: string;
-}
-
-export interface TopCard {
-  cardId: string;
-  title: string;
-  value: string;
-  subvalue?: string;
-  trendText?: string;
-  badgeType?: string;
-  detail?: Record<string, any>;
-}
-
-export interface Alert {
-  id?: string | number;
-  alertId: string;
-  title: string;
+  target2025: number;
+  targetExcellence: number;
+  status: 'em_evolucao' | 'atencao' | 'critico';
   description: string;
-  severity: 'high' | 'medium' | 'low';
-  category?: string;
-  schoolName?: string;
-  date?: string;
-  resolved: boolean;
-}
-
-export interface Highlight {
-  highlightId: string;
-  title: string;
-  description: string;
-  category?: string;
-  icon?: string;
-}
-
-export interface MainGoal {
-  goalId: string;
-  title: string;
-  targetValue: number;
-  targetUnit: string;
-  targetYear: number;
-  currentValue: number;
-  motto: string;
-  description: string;
+  responsibleArea: string;
+  impactScore: number;
+  metaPlanejadaMonthly?: number[]; // [Jan, Fev, Mar, Abr, Mai, Jun, Jul, Ago, Set, Out, Nov, Dez]
 }
 
 export interface School {
-  schoolId: string;
+  id: string;
+  code: string;
   name: string;
-  inep?: string;
-  region?: string;
-  address?: string;
-  principal?: string;
-  phone?: string;
-  studentsCount?: number;
-  teachersCount?: number;
-  ideb?: number;
-  frequency?: number;
-  riskCount?: number;
-  status?: string;
+  region: 'Norte' | 'Sul' | 'Leste' | 'Oeste' | 'Centro';
+  director: string;
+  status: RiskLevel;
+  studentCount: number;
+  teacherCount: number;
+  stages: ('educacao_infantil' | 'anos_iniciais' | 'anos_finais' | 'eja')[];
+  ideb: number;
+  frequencia: number;
+  alfabetizacao: number;
+  taxaAprovacao: number;
+  taxaAbandono: number;
+  distorcaoIdadeSerie: number;
+  execucaoFinanceira: number;
+  alunosEmRisco: number;
+  professoresSemFormacao: number;
+  hasInternetIssues: boolean;
+  address: string;
+  phone: string;
+}
+
+export interface AlertItem {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'high' | 'medium' | 'low';
+  category: KpiCategory;
+  schoolId?: string;
+  schoolName?: string;
+  kpiId?: string;
+  dateCreated: string;
+  resolved: boolean;
+  actionPlanId?: string;
+}
+
+export interface PositiveHighlight {
+  id: string;
+  title: string;
+  description: string;
+  schoolId?: string;
+  schoolName?: string;
+  metricChange: string;
+  date: string;
 }
 
 export interface ActionPlan {
-  planId: string;
+  id: string;
   title: string;
-  indicatorId?: string;
+  description: string;
+  schoolId?: string;
   schoolName?: string;
-  owner?: string;
-  deadline?: string;
-  status: string;
-  priority: string;
-  progress: number;
-  description?: string;
+  kpiId?: string;
+  kpiName?: string;
+  responsible: string;
+  deadline: string;
+  status: 'a_fazer' | 'em_andamento' | 'concluido' | 'em_atraso';
+  priority: 'alta' | 'media' | 'baixa';
+  completionPercentage: number;
+  steps: { id: string; description: string; done: boolean }[];
+  createdDate: string;
 }
 
 export interface UserProfile {
-  uid: string;
+  name: string;
+  role: 'Secretário(a) de Educação' | 'Diretor(a) Escolar' | 'Coordenador(a) Pedagógico(a)' | 'Técnico(a) de TI';
   email: string;
-  displayName?: string;
-  photoURL?: string;
-  role: string;
+  municipality: string;
 }
 
-export type SyncState = 'online' | 'offline' | 'syncing' | 'synced' | 'error';
+export interface MunicipalityConfig {
+  id: string;
+  name: string; // e.g. 'Valparaíso de Goiás'
+  uf: string; // e.g. 'GO'
+  region: string; // e.g. 'Entorno do DF' / 'Centro-Oeste'
+  mayorName: string; // e.g. 'Marcus Vinícius'
+  secretaryName: string; // e.g. 'Dr. Fernando Vasconcelos'
+  inepCode: string; // e.g. '5221858'
+  cnpj: string; // e.g. '01.613.385/0001-89'
+  siopeCode: string; // e.g. 'GO-522185'
+  totalStudents: number; // e.g. 28500
+  totalSchools: number; // e.g. 48
+  totalTeachers: number; // e.g. 1420
+  fundebVaatValue: number; // e.g. 1250000
+  pnaeValue: number; // e.g. 620000
+  lastCensoYear: string; // e.g. '2024'
+}
+
+export interface ApiContractEndpoint {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  path: string;
+  title: string;
+  description: string;
+  requestBodyExample?: string;
+  responseExample: string;
+}
