@@ -9,7 +9,7 @@ import { registerAuthRoutes, requireAuth } from './server/auth';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Identity provider shared with the smart-teacher app: its frontend calls
 // /api/auth/* on this server directly (cross-origin), so it needs to be in
