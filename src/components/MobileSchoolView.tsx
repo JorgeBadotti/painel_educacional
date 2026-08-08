@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCockpit } from '../context/CockpitContext';
-import { School } from '../types';
+import { School, ActionPlan } from '../types';
 import {
   Smartphone,
   UserCheck,
@@ -30,7 +30,9 @@ import {
   Laptop,
   MapPin,
   GraduationCap,
-  ScanLine
+  ScanLine,
+  X,
+  Wand2
 } from 'lucide-react';
 
 type RoleMode = 'diretor' | 'professor';
@@ -70,6 +72,133 @@ const getSocialSemaphore = (school: School): Semaphore => {
   return 'vermelho';
 };
 
+const SEMAPHORE_LABEL: Record<Semaphore, string> = {
+  verde: 'Adequado',
+  amarelo: 'Atenção',
+  vermelho: 'Alerta'
+};
+
+const SEMAPHORE_TEXT_CLASS: Record<Semaphore, string> = {
+  verde: 'text-emerald-400',
+  amarelo: 'text-amber-400',
+  vermelho: 'text-rose-400'
+};
+
+interface SchoolTag {
+  label: string;
+  className: string;
+}
+
+// Diagnostic tags used both in the detail modal and to seed the generated plan below —
+// derived only from real per-school indicators already in the data model.
+const getSchoolTags = (school: School): SchoolTag[] => {
+  const tags: SchoolTag[] = [];
+  const aprendizado = getAprendizadoSemaphore(school);
+  const insumos = getInsumosSemaphore(school);
+  const social = getSocialSemaphore(school);
+
+  if (aprendizado === 'vermelho') {
+    tags.push({ label: 'Aprendizado Crítico', className: 'bg-rose-950 text-rose-300 border-rose-800' });
+  } else if (aprendizado === 'amarelo') {
+    tags.push({ label: 'Aprendizado em Atenção', className: 'bg-amber-950 text-amber-300 border-amber-800' });
+  }
+
+  if (insumos === 'vermelho') {
+    tags.push({ label: 'Infraestrutura Defasada', className: 'bg-amber-950 text-amber-300 border-amber-800' });
+  } else if (insumos === 'amarelo') {
+    tags.push({ label: 'Insumos em Atenção', className: 'bg-amber-950 text-amber-300 border-amber-800' });
+  }
+
+  if (social === 'vermelho') {
+    tags.push({ label: 'Alta Vulnerabilidade Social', className: 'bg-rose-950 text-rose-300 border-rose-800' });
+  } else if (social === 'amarelo') {
+    tags.push({ label: 'Vulnerabilidade Social em Atenção', className: 'bg-amber-950 text-amber-300 border-amber-800' });
+  }
+
+  return tags;
+};
+
+// Builds a 5W2H-style draft action plan from the school's real indicators. Mirrors the
+// simulated-fallback pattern already used in RadarAiAnalysis.tsx (no external AI call here).
+const buildGeneratedPlan = (school: School): Omit<ActionPlan, 'id' | 'createdDate'> => {
+  const aprendizado = getAprendizadoSemaphore(school);
+  const insumos = getInsumosSemaphore(school);
+  const social = getSocialSemaphore(school);
+  const criticalCount = [aprendizado, insumos, social].filter((s) => s === 'vermelho').length;
+
+  const focusAreas: string[] = [];
+  if (aprendizado !== 'verde') focusAreas.push('Alfabetização e Aprovação');
+  if (insumos !== 'verde') focusAreas.push('Infraestrutura e Execução Financeira');
+  if (social !== 'verde') focusAreas.push('Evasão e Alunos em Risco');
+
+  const title =
+    aprendizado === 'vermelho'
+      ? `Plano de Choque Emergencial de Recomposição da Aprendizagem - ${school.name}`
+      : social === 'vermelho'
+      ? `Plano de Enfrentamento à Vulnerabilidade Social - ${school.name}`
+      : insumos === 'vermelho'
+      ? `Plano de Regularização de Infraestrutura e Insumos - ${school.name}`
+      : `Plano de Monitoramento e Melhoria Contínua - ${school.name}`;
+
+  const description =
+    focusAreas.length > 0
+      ? `Identificados indicadores críticos ou em atenção em ${focusAreas.join(', ')}, exigindo intervenção ${
+          criticalCount >= 2 ? 'emergencial multi-eixo' : 'direcionada'
+        }.`
+      : 'Escola com indicadores adequados nas 3 dimensões — plano de manutenção e monitoramento preventivo.';
+
+  const steps: { id: string; description: string; done: boolean }[] = [];
+  let stepIndex = 1;
+
+  if (aprendizado !== 'verde') {
+    steps.push({
+      id: `plan-step-${stepIndex++}`,
+      description: `Diagnóstico Urgente de Alfabetização e Numeramento (Prazo: 5 dias) | Responsável: Coordenação Pedagógica | Metodologia: Aplicação de teste individual de leitura e matemática básica com todas as turmas de ciclo.`,
+      done: false
+    });
+    steps.push({
+      id: `plan-step-${stepIndex++}`,
+      description: `Implantação de Agrupamentos Flexíveis de Leitura e Escrita (Frequência: Diária - 30 min) | Responsável: Professores Regentes | Metodologia: Oficinas diárias com materiais didáticos estruturados por nível de escrita.`,
+      done: false
+    });
+  }
+
+  if (insumos !== 'verde') {
+    steps.push({
+      id: `plan-step-${stepIndex++}`,
+      description: `Regularização de Infraestrutura e Conectividade (Prazo: 30 dias) | Responsável: Secretaria de Infraestrutura | Metodologia: Vistoria técnica e priorização orçamentária das pendências identificadas.`,
+      done: false
+    });
+  }
+
+  if (social !== 'verde') {
+    steps.push({
+      id: `plan-step-${stepIndex++}`,
+      description: `Força-Tarefa de Busca Ativa Escolar (Prazo: 48 horas) | Responsável: Agentes de Busca Ativa | Metodologia: Visitas domiciliares imediatas e contato direto com famílias dos alunos com faltas não justificadas.`,
+      done: false
+    });
+  }
+
+  steps.push({
+    id: `plan-step-${stepIndex++}`,
+    description: `Acompanhamento Quinzenal de Indicadores (Frequência: Quinzenal) | Responsável: Direção Escolar | Metodologia: Revisão do painel de KPIs da escola e ajuste das ações em curso.`,
+    done: false
+  });
+
+  return {
+    title,
+    description,
+    schoolId: school.id,
+    schoolName: school.name,
+    responsible: school.director,
+    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    status: 'a_fazer',
+    priority: criticalCount >= 1 ? 'alta' : focusAreas.length > 0 ? 'media' : 'baixa',
+    completionPercentage: 0,
+    steps
+  };
+};
+
 interface StudentAttendance {
   id: string;
   name: string;
@@ -90,12 +219,28 @@ export const MobileSchoolView: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<string>('5º Ano A - Matutino');
   const [toast, setToast] = useState<string | null>(null);
   const [zoneFilter, setZoneFilter] = useState<ZoneFilter>('todas');
+  const [detailSchoolId, setDetailSchoolId] = useState<string | null>(null);
+  const [generatingPlanSchoolId, setGeneratingPlanSchoolId] = useState<string | null>(null);
+  const [savedPlanBySchool, setSavedPlanBySchool] = useState<Record<string, ActionPlan>>({});
 
   // Selected school data
   const currentSchool = schools.find((s) => s.id === selectedSchoolId) || schools[0];
+  const detailSchool = schools.find((s) => s.id === detailSchoolId) || null;
 
   const hasSchoolAlert = (school: School): boolean =>
     school.status === 'critico' || alerts.some((a) => a.schoolId === school.id && !a.resolved);
+
+  const handleGeneratePlan = (school: School) => {
+    setGeneratingPlanSchoolId(school.id);
+    setTimeout(() => {
+      const planData = buildGeneratedPlan(school);
+      const plan: ActionPlan = { ...planData, id: `act-${Date.now()}`, createdDate: new Date().toISOString().split('T')[0] };
+      addActionPlan(planData);
+      setSavedPlanBySchool((prev) => ({ ...prev, [school.id]: plan }));
+      setGeneratingPlanSchoolId(null);
+      showNotification(`Plano gerado e salvo na Central de Planos para ${school.name}!`);
+    }, 1400);
+  };
 
   const filteredSchoolsForZone = schools.filter(
     (s) => zoneFilter === 'todas' || getSchoolZone(s) === zoneFilter
@@ -610,10 +755,7 @@ export const MobileSchoolView: React.FC = () => {
                     {schools.map((s) => (
                       <button
                         key={s.id}
-                        onClick={() => {
-                          setSelectedSchoolId(s.id);
-                          setActiveMobileTab('resumo');
-                        }}
+                        onClick={() => setDetailSchoolId(s.id)}
                         className="w-full text-left bg-slate-900/60 hover:bg-slate-900 p-2 rounded-lg transition"
                       >
                         <div className="flex items-center justify-between gap-1">
@@ -697,10 +839,7 @@ export const MobileSchoolView: React.FC = () => {
                   {filteredSchoolsForZone.map((s) => (
                     <button
                       key={s.id}
-                      onClick={() => {
-                        setSelectedSchoolId(s.id);
-                        setActiveMobileTab('resumo');
-                      }}
+                      onClick={() => setDetailSchoolId(s.id)}
                       className={`w-full text-left bg-[#060b19] border p-2.5 rounded-xl space-y-1.5 transition ${
                         s.id === selectedSchoolId ? 'border-amber-500/60' : 'border-slate-800 hover:border-slate-700'
                       }`}
@@ -973,6 +1112,259 @@ export const MobileSchoolView: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* School Detail Modal (Diagnóstico das 3 Dimensões + Gerador de Plano) */}
+      {detailSchool && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            onClick={() => setDetailSchoolId(null)}
+          />
+          <div className="relative w-full max-w-md max-h-[88vh] overflow-y-auto bg-[#0b1329] border border-slate-800 rounded-2xl shadow-2xl">
+            <div className="sticky top-0 z-10 bg-[#0b1329] border-b border-slate-800 p-4 flex items-center justify-between">
+              <h3 className="text-sm font-black text-white uppercase truncate pr-3">{detailSchool.name}</h3>
+              <button
+                onClick={() => setDetailSchoolId(null)}
+                aria-label="Fechar detalhes da escola"
+                className="shrink-0 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4 text-slate-300" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Header Card */}
+              <div className="bg-gradient-to-br from-sky-950 to-slate-900 border border-sky-900/60 rounded-xl p-3.5 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="px-1.5 py-0.5 bg-slate-900/70 border border-slate-700 text-slate-300 text-[10px] font-mono font-bold rounded">
+                    INEP {detailSchool.code}
+                  </span>
+                  {hasSchoolAlert(detailSchool) && (
+                    <span className="px-2 py-0.5 bg-rose-950 text-rose-300 text-[10px] font-black rounded-full border border-rose-800">
+                      Índice Alerta
+                    </span>
+                  )}
+                </div>
+                <p className="text-base font-black text-white leading-tight">{detailSchool.name}</p>
+                <p className="text-[11px] text-sky-200/80 flex items-start gap-1">
+                  <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>
+                    {detailSchool.address} - {municipalityConfig.name} - {municipalityConfig.uf}
+                  </span>
+                </p>
+              </div>
+
+              {/* Taxas de Rendimento Escolar */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  Taxas de Rendimento Escolar
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-emerald-950/40 border border-emerald-900/60 rounded-lg p-2 text-center">
+                    <p className="text-[9px] font-bold text-emerald-300 uppercase">Aprovação</p>
+                    <p className="text-base font-black text-emerald-400 mt-0.5">
+                      {detailSchool.taxaAprovacao.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="bg-amber-950/40 border border-amber-900/60 rounded-lg p-2 text-center">
+                    <p className="text-[9px] font-bold text-amber-300 uppercase">Reprovação</p>
+                    <p className="text-base font-black text-amber-400 mt-0.5">
+                      {Math.max(0, 100 - detailSchool.taxaAprovacao - detailSchool.taxaAbandono).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="bg-rose-950/40 border border-rose-900/60 rounded-lg p-2 text-center">
+                    <p className="text-[9px] font-bold text-rose-300 uppercase">Abandono / Evasão</p>
+                    <p className="text-base font-black text-rose-400 mt-0.5">
+                      {detailSchool.taxaAbandono.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Distorção Idade-Série */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  Distorção Idade-Série
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-rose-950/40 border border-rose-900/60 rounded-lg p-2 text-center">
+                    <p className="text-[9px] font-bold text-rose-300 uppercase">Distorção Total EF</p>
+                    <p className="text-base font-black text-rose-400 mt-0.5">
+                      {detailSchool.distorcaoIdadeSerie.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-2 text-center">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Anos Iniciais (5º)</p>
+                    <p className="text-sm font-black text-slate-600 mt-1.5">-</p>
+                    <p className="text-[8px] text-slate-500 mt-0.5">Aguardando integração API</p>
+                  </div>
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-2 text-center">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Anos Finais (9º)</p>
+                    <p className="text-sm font-black text-slate-600 mt-1.5">-</p>
+                    <p className="text-[8px] text-slate-500 mt-0.5">Aguardando integração API</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Diagnóstico das 3 Dimensões */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  Diagnóstico das 3 Dimensões
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="bg-[#060b19] border border-slate-800 rounded-lg p-2.5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-white">1. Aprendizado</span>
+                      <span className={`w-2.5 h-2.5 rounded-full ${SEMAPHORE_DOT_CLASS[getAprendizadoSemaphore(detailSchool)]}`} />
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Português: <span className="text-slate-500">Aguardando API</span>
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Matemática: <span className="text-slate-500">Aguardando API</span>
+                    </p>
+                  </div>
+
+                  <div className="bg-[#060b19] border border-slate-800 rounded-lg p-2.5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-white">2. Insumos</span>
+                      <span className={`w-2.5 h-2.5 rounded-full ${SEMAPHORE_DOT_CLASS[getInsumosSemaphore(detailSchool)]}`} />
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Infraestrutura:{' '}
+                      <span className={SEMAPHORE_TEXT_CLASS[detailSchool.hasInternetIssues ? 'vermelho' : 'verde']}>
+                        {detailSchool.hasInternetIssues ? 'Alerta' : 'Adequado'}
+                      </span>
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Docentes:{' '}
+                      <span
+                        className={
+                          SEMAPHORE_TEXT_CLASS[
+                            detailSchool.professoresSemFormacao / Math.max(1, detailSchool.teacherCount) > 0.15
+                              ? 'vermelho'
+                              : 'verde'
+                          ]
+                        }
+                      >
+                        {detailSchool.professoresSemFormacao / Math.max(1, detailSchool.teacherCount) > 0.15
+                          ? 'Alerta'
+                          : 'Adequado'}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="bg-[#060b19] border border-slate-800 rounded-lg p-2.5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-white">3. Social</span>
+                      <span className={`w-2.5 h-2.5 rounded-full ${SEMAPHORE_DOT_CLASS[getSocialSemaphore(detailSchool)]}`} />
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Evasão: <span className={SEMAPHORE_TEXT_CLASS[detailSchool.taxaAbandono >= 6 ? 'vermelho' : detailSchool.taxaAbandono >= 3 ? 'amarelo' : 'verde']}>
+                        {SEMAPHORE_LABEL[detailSchool.taxaAbandono >= 6 ? 'vermelho' : detailSchool.taxaAbandono >= 3 ? 'amarelo' : 'verde']}
+                      </span>
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Alunos em Risco:{' '}
+                      <span
+                        className={
+                          SEMAPHORE_TEXT_CLASS[
+                            detailSchool.alunosEmRisco / Math.max(1, detailSchool.studentCount) >= 0.12
+                              ? 'vermelho'
+                              : detailSchool.alunosEmRisco / Math.max(1, detailSchool.studentCount) >= 0.05
+                              ? 'amarelo'
+                              : 'verde'
+                          ]
+                        }
+                      >
+                        {
+                          SEMAPHORE_LABEL[
+                            detailSchool.alunosEmRisco / Math.max(1, detailSchool.studentCount) >= 0.12
+                              ? 'vermelho'
+                              : detailSchool.alunosEmRisco / Math.max(1, detailSchool.studentCount) >= 0.05
+                              ? 'amarelo'
+                              : 'verde'
+                          ]
+                        }
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gerador de Plano com IA */}
+              <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-sky-200 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                    Gerador de Plano com IA
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-sky-500/20 text-sky-300 rounded text-[9px] font-bold border border-sky-500/30">
+                    SMART 5W2H
+                  </span>
+                </div>
+                <p className="text-[11px] text-sky-100/80 leading-tight">
+                  Criar um plano de ação automatizado com foco nos insumos, rendimento e aprendizagem desta unidade
+                  escolar.
+                </p>
+
+                {getSchoolTags(detailSchool).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {getSchoolTags(detailSchool).map((tag) => (
+                      <span
+                        key={tag.label}
+                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${tag.className}`}
+                      >
+                        {tag.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {!savedPlanBySchool[detailSchool.id] ? (
+                  <button
+                    onClick={() => handleGeneratePlan(detailSchool)}
+                    disabled={generatingPlanSchoolId === detailSchool.id}
+                    className="w-full py-2.5 bg-sky-500 hover:bg-sky-400 disabled:opacity-60 text-slate-950 font-black text-xs rounded-lg shadow transition flex items-center justify-center gap-1.5"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    <span>{generatingPlanSchoolId === detailSchool.id ? 'Gerando...' : 'Gerar'}</span>
+                  </button>
+                ) : (
+                  <div className="bg-[#060b19] border border-emerald-800/60 rounded-xl p-3 space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2 py-0.5 bg-emerald-950 text-emerald-300 text-[9px] font-black rounded-full border border-emerald-800 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Salvo na Central de Planos
+                      </span>
+                      <span className="px-2 py-0.5 bg-rose-950 text-rose-300 text-[9px] font-black rounded-full border border-rose-800 uppercase">
+                        {savedPlanBySchool[detailSchool.id].priority}
+                      </span>
+                    </div>
+                    <p className="text-xs font-black text-white leading-tight">
+                      {savedPlanBySchool[detailSchool.id].title}
+                    </p>
+                    <p className="text-[10.5px] text-slate-400 leading-snug">
+                      {savedPlanBySchool[detailSchool.id].description}
+                    </p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider pt-1 border-t border-slate-800">
+                      Ações Estruturadas (5W2H):
+                    </p>
+                    <div className="space-y-1.5">
+                      {savedPlanBySchool[detailSchool.id].steps.map((step, idx) => (
+                        <div key={step.id} className="bg-slate-900/60 p-2 rounded-lg text-[10px] text-slate-300 leading-snug">
+                          <span className="font-bold text-white">Passo {idx + 1}: </span>
+                          {step.description}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
