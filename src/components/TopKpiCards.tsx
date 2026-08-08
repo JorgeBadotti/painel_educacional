@@ -14,6 +14,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useCockpit } from '../context/CockpitContext';
+import { INITIAL_RADAR_PROGRAMS, calculateRadarCoreMetrics } from '../data/radarRecursosData';
 
 export const TopKpiCards: React.FC = () => {
   const { schools, kpis, setFilterRisk, setActiveTab } = useCockpit();
@@ -29,6 +30,14 @@ export const TopKpiCards: React.FC = () => {
   const profsFormacao = 63;
   const recursos = 'R$ 2,6 mi';
 
+  // Preview of the Radar de Recursos tab; uses the same seed data + formula as
+  // RadarRecursosView so this banner never drifts from the real IAR/potencial values.
+  const radarMetrics = calculateRadarCoreMetrics(INITIAL_RADAR_PROGRAMS);
+  const radarPotentialFormatted = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(radarMetrics.totalPotentialValue);
+
   return (
     <div className="space-y-3 mb-3">
       {/* Prominent Golden Opportunity Banner for Main Cockpit Integration */}
@@ -43,10 +52,10 @@ export const TopKpiCards: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.2 bg-amber-400 text-slate-950 text-[10px] font-black rounded uppercase tracking-wider">
-                12 Oportunidades Mapeadas
+                {radarMetrics.totalOpportunities} Oportunidades Mapeadas
               </span>
               <span className="text-[11px] font-mono text-amber-300 font-bold">
-                R$ 3.250.000,00 Potencial
+                {radarPotentialFormatted} Potencial
               </span>
             </div>
             <h4 className="text-sm sm:text-base font-black text-white group-hover:text-amber-300 transition mt-0.5 flex items-center gap-1.5">
@@ -54,7 +63,7 @@ export const TopKpiCards: React.FC = () => {
               <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
             </h4>
             <p className="text-xs text-slate-300 font-medium hidden sm:block">
-              Índice IAR em 78/100. Clique para analisar programas, pendências documentais e simulações.
+              Índice IAR em {radarMetrics.iarIndex}/100. Clique para analisar programas, pendências documentais e simulações.
             </p>
           </div>
         </div>

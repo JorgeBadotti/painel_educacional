@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCockpit } from '../context/CockpitContext';
-import { INITIAL_RADAR_PROGRAMS } from '../data/radarRecursosData';
+import { INITIAL_RADAR_PROGRAMS, calculateRadarCoreMetrics } from '../data/radarRecursosData';
 import { EducationResourceProgram, RadarSummaryMetrics, DocChecklistItem } from '../types/radar';
 import { RadarIndexedDbService } from '../utils/indexedDbService';
 import { RadarKPIHeader } from './radar/RadarKPIHeader';
@@ -56,25 +56,16 @@ export const RadarRecursosView: React.FC = () => {
   }, []);
 
   // Compute aggregate summary metrics including commercial differential IAR
-  const totalMonitoredPrograms = programs.length;
-  const totalOpportunities = programs.filter((p) => p.eligibilityStatus === 'elegivel' || p.eligibilityStatus === 'pendente').length;
-  const programsAtRisk = programs.filter((p) => p.eligibilityStatus === 'risco' || p.risk === 'Crítico' || p.risk === 'Alto').length;
-  const totalPotentialValue = programs
-    .filter((p) => p.eligibilityStatus !== 'encerrado')
-    .reduce((sum, p) => sum + p.estimatedValue, 0);
+  const {
+    totalMonitoredPrograms,
+    totalOpportunities,
+    programsAtRisk,
+    totalPotentialValue,
+    documentPendingCount,
+    iarIndex,
+  } = calculateRadarCoreMetrics(programs);
   const upcomingDeadlinesCount = programs.filter((p) => p.daysToDeadline <= 30 && p.eligibilityStatus !== 'encerrado').length;
-  const documentPendingCount = programs.reduce((count, p) => count + p.checklist.filter((c) => !c.uploaded).length, 0);
 
-  // Calculate IAR (Índice de Aproveitamento de Recursos) 0 - 100
-  // Formula: Base 100 - (Risk Penalty * 8) - (Doc Penalty * 3) + (Eligible Ratio * 20)
-  const calculateIarScore = (): number => {
-    const eligibleCount = programs.filter((p) => p.eligibilityStatus === 'elegivel').length;
-    const ratioEligible = eligibleCount / Math.max(1, totalMonitoredPrograms);
-    const rawScore = Math.round(72 + ratioEligible * 25 - programsAtRisk * 3 - (documentPendingCount * 0.8));
-    return Math.min(100, Math.max(0, rawScore));
-  };
-
-  const iarIndex = calculateIarScore();
   const iarStatusText =
     iarIndex >= 85
       ? 'Excelente aproveitamento'

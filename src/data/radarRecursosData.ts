@@ -1,5 +1,34 @@
 import { EducationResourceProgram } from '../types/radar';
 
+export interface RadarCoreMetrics {
+  totalMonitoredPrograms: number;
+  totalOpportunities: number;
+  programsAtRisk: number;
+  totalPotentialValue: number;
+  documentPendingCount: number;
+  iarIndex: number;
+}
+
+// Shared by RadarRecursosView (full tab) and TopKpiCards (home banner preview)
+// so the two never drift out of sync on the same underlying data.
+export function calculateRadarCoreMetrics(programs: EducationResourceProgram[]): RadarCoreMetrics {
+  const totalMonitoredPrograms = programs.length;
+  const totalOpportunities = programs.filter((p) => p.eligibilityStatus === 'elegivel' || p.eligibilityStatus === 'pendente').length;
+  const programsAtRisk = programs.filter((p) => p.eligibilityStatus === 'risco' || p.risk === 'Crítico' || p.risk === 'Alto').length;
+  const totalPotentialValue = programs
+    .filter((p) => p.eligibilityStatus !== 'encerrado')
+    .reduce((sum, p) => sum + p.estimatedValue, 0);
+  const documentPendingCount = programs.reduce((count, p) => count + p.checklist.filter((c) => !c.uploaded).length, 0);
+
+  // IAR (Índice de Aproveitamento de Recursos) 0-100.
+  // Formula: Base 72 + (Eligible Ratio * 25) - (Risk Penalty * 3) - (Doc Penalty * 0.8)
+  const eligibleCount = programs.filter((p) => p.eligibilityStatus === 'elegivel').length;
+  const ratioEligible = eligibleCount / Math.max(1, totalMonitoredPrograms);
+  const iarIndex = Math.min(100, Math.max(0, Math.round(72 + ratioEligible * 25 - programsAtRisk * 3 - (documentPendingCount * 0.8))));
+
+  return { totalMonitoredPrograms, totalOpportunities, programsAtRisk, totalPotentialValue, documentPendingCount, iarIndex };
+}
+
 export const INITIAL_RADAR_PROGRAMS: EducationResourceProgram[] = [
   {
     id: 'prog-fundeb-vaat',
