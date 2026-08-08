@@ -42,30 +42,29 @@ export class RadarIndexedDbService {
     return this.dbPromise;
   }
 
+  // Intentionally does NOT swallow IndexedDB-unavailable errors: callers rely on
+  // this rejecting to know the sync status is degraded (see RadarRecursosView's
+  // isIndexedDbSynced badge). Callers that just want data with a safe fallback
+  // should catch and fall back to INITIAL_RADAR_PROGRAMS themselves.
   static async getAllPrograms(): Promise<EducationResourceProgram[]> {
-    try {
-      const db = await this.getDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const request = store.getAll();
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const request = store.getAll();
 
-        request.onsuccess = () => {
-          const res = request.result as EducationResourceProgram[];
-          if (!res || res.length === 0) {
-            // Seed initial data if empty
-            this.saveAllPrograms(INITIAL_RADAR_PROGRAMS).then(() => resolve(INITIAL_RADAR_PROGRAMS));
-          } else {
-            resolve(res);
-          }
-        };
+      request.onsuccess = () => {
+        const res = request.result as EducationResourceProgram[];
+        if (!res || res.length === 0) {
+          // Seed initial data if empty
+          this.saveAllPrograms(INITIAL_RADAR_PROGRAMS).then(() => resolve(INITIAL_RADAR_PROGRAMS)).catch(reject);
+        } else {
+          resolve(res);
+        }
+      };
 
-        request.onerror = () => reject(request.error);
-      });
-    } catch (e) {
-      console.warn('Fallback to memory/mock due to IndexedDB issue', e);
-      return INITIAL_RADAR_PROGRAMS;
-    }
+      request.onerror = () => reject(request.error);
+    });
   }
 
   static async saveAllPrograms(programs: EducationResourceProgram[]): Promise<void> {
