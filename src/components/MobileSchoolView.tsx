@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCockpit } from '../context/CockpitContext';
+import { School } from '../types';
 import {
   Smartphone,
   UserCheck,
@@ -26,11 +27,48 @@ import {
   CheckSquare,
   RefreshCw,
   Sliders,
-  Laptop
+  Laptop,
+  MapPin,
+  GraduationCap,
+  ScanLine
 } from 'lucide-react';
 
 type RoleMode = 'diretor' | 'professor';
-type MobileTab = 'resumo' | 'chamada' | 'diario' | 'ocorrencias' | 'tarefas';
+type MobileTab = 'resumo' | 'escolas' | 'chamada' | 'diario' | 'ocorrencias' | 'tarefas';
+type ZoneFilter = 'todas' | 'urbana' | 'rural';
+type Semaphore = 'verde' | 'amarelo' | 'vermelho';
+
+const SEMAPHORE_DOT_CLASS: Record<Semaphore, string> = {
+  verde: 'bg-emerald-500',
+  amarelo: 'bg-amber-500',
+  vermelho: 'bg-rose-500'
+};
+
+// Zone (urbana/rural) isn't in the School model yet; derive a stable pseudo-classification
+// from the INEP code so filtering is deterministic without adding a new data field.
+const getSchoolZone = (school: School): 'urbana' | 'rural' => {
+  const digitSum = school.code.split('').reduce((sum, ch) => sum + (parseInt(ch, 10) || 0), 0);
+  return digitSum % 3 === 0 ? 'rural' : 'urbana';
+};
+
+const getAprendizadoSemaphore = (school: School): Semaphore => {
+  if (school.alfabetizacao >= 80 && school.taxaAprovacao >= 90) return 'verde';
+  if (school.alfabetizacao >= 60 && school.taxaAprovacao >= 75) return 'amarelo';
+  return 'vermelho';
+};
+
+const getInsumosSemaphore = (school: School): Semaphore => {
+  if (school.execucaoFinanceira >= 80 && !school.hasInternetIssues) return 'verde';
+  if (school.execucaoFinanceira >= 50) return 'amarelo';
+  return 'vermelho';
+};
+
+const getSocialSemaphore = (school: School): Semaphore => {
+  const riskRatio = school.studentCount > 0 ? school.alunosEmRisco / school.studentCount : 0;
+  if (school.taxaAbandono < 3 && riskRatio < 0.05) return 'verde';
+  if (school.taxaAbandono < 6 && riskRatio < 0.12) return 'amarelo';
+  return 'vermelho';
+};
 
 interface StudentAttendance {
   id: string;
@@ -42,7 +80,7 @@ interface StudentAttendance {
 }
 
 export const MobileSchoolView: React.FC = () => {
-  const { schools, actionPlans, alerts, addAlert, addActionPlan } = useCockpit();
+  const { schools, actionPlans, alerts, addAlert, addActionPlan, municipalityConfig, setActiveTab } = useCockpit();
 
   // Selected state
   const [roleMode, setRoleMode] = useState<RoleMode>('diretor');
@@ -51,9 +89,24 @@ export const MobileSchoolView: React.FC = () => {
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>(schools[0]?.id || 'esc-1');
   const [selectedClass, setSelectedClass] = useState<string>('5º Ano A - Matutino');
   const [toast, setToast] = useState<string | null>(null);
+  const [zoneFilter, setZoneFilter] = useState<ZoneFilter>('todas');
 
   // Selected school data
   const currentSchool = schools.find((s) => s.id === selectedSchoolId) || schools[0];
+
+  const hasSchoolAlert = (school: School): boolean =>
+    school.status === 'critico' || alerts.some((a) => a.schoolId === school.id && !a.resolved);
+
+  const filteredSchoolsForZone = schools.filter(
+    (s) => zoneFilter === 'todas' || getSchoolZone(s) === zoneFilter
+  );
+
+  const totalDocentesRede = schools.reduce((sum, s) => sum + s.teacherCount, 0);
+  const totalDocentesSemFormacaoRede = schools.reduce((sum, s) => sum + s.professoresSemFormacao, 0);
+  const percentDocentesAdequados =
+    totalDocentesRede > 0
+      ? Math.round(((totalDocentesRede - totalDocentesSemFormacaoRede) / totalDocentesRede) * 1000) / 10
+      : 0;
 
   // Mock Students for Teacher Chamada Digital
   const [studentsList, setStudentsList] = useState<StudentAttendance[]>([
@@ -351,6 +404,14 @@ export const MobileSchoolView: React.FC = () => {
                   Resumo
                 </button>
                 <button
+                  onClick={() => setActiveMobileTab('escolas')}
+                  className={`flex-1 py-1.5 rounded-lg font-bold transition text-center ${
+                    activeMobileTab === 'escolas' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                  }`}
+                >
+                  Escolas
+                </button>
+                <button
                   onClick={() => setActiveMobileTab('ocorrencias')}
                   className={`flex-1 py-1.5 rounded-lg font-bold transition text-center ${
                     activeMobileTab === 'ocorrencias' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
@@ -484,6 +545,197 @@ export const MobileSchoolView: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Rede Municipal: Docentes */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-[#060b19] border border-slate-800 p-2.5 rounded-xl">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <span>Docentes</span>
+                      <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
+                    </div>
+                    <p className="text-lg font-black text-sky-400 mt-0.5">{totalDocentesRede}</p>
+                    <p className="text-[9px] text-slate-400">Total na rede municipal</p>
+                  </div>
+
+                  <div className="bg-[#060b19] border border-slate-800 p-2.5 rounded-xl">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <span>Docentes Adequ...</span>
+                      <Award className="w-3.5 h-3.5 text-emerald-400" />
+                    </div>
+                    <p className="text-lg font-black text-emerald-400 mt-0.5">
+                      {percentDocentesAdequados.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+                    </p>
+                    <p className="text-[9px] text-slate-400">Com formação na área</p>
+                  </div>
+                </div>
+
+                {/* Aprendizado por disciplina (pendente de integração com API externa) */}
+                <div className="bg-[#060b19] border border-slate-800 p-3 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+                      Aprendizado
+                    </span>
+                    <span className="px-1.5 py-0.2 bg-slate-800 text-slate-400 rounded text-[9px] font-bold">
+                      Aguardando integração API
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-900/60 p-2 rounded-lg text-center">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Português</p>
+                      <p className="text-lg font-black text-slate-600 mt-0.5">-</p>
+                      <p className="text-[9px] text-slate-500">Aguardando integração API</p>
+                    </div>
+                    <div className="bg-slate-900/60 p-2 rounded-lg text-center">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Matemática</p>
+                      <p className="text-lg font-black text-slate-600 mt-0.5">-</p>
+                      <p className="text-[9px] text-slate-500">Aguardando integração API</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Matriz de Desigualdade */}
+                <div className="bg-[#060b19] border border-slate-800 p-3 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <ScanLine className="w-3.5 h-3.5 text-amber-400" />
+                      Matriz de Desigualdade
+                    </span>
+                    <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-300 rounded text-[9px] font-bold">
+                      {schools.length} escolas
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+                    {schools.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => {
+                          setSelectedSchoolId(s.id);
+                          setActiveMobileTab('resumo');
+                        }}
+                        className="w-full text-left bg-slate-900/60 hover:bg-slate-900 p-2 rounded-lg transition"
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-[10.5px] font-bold text-white truncate">{s.name}</p>
+                          {hasSchoolAlert(s) && (
+                            <span className="shrink-0 px-1.5 py-0.2 bg-rose-950 text-rose-300 text-[8px] font-black rounded border border-rose-800">
+                              Alerta
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-slate-500 font-mono">INEP {s.code}</p>
+                        <div className="flex items-center gap-3 mt-1 text-[8.5px] text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 rounded-full ${SEMAPHORE_DOT_CLASS[getAprendizadoSemaphore(s)]}`} />
+                            Aprendizado
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 rounded-full ${SEMAPHORE_DOT_CLASS[getInsumosSemaphore(s)]}`} />
+                            Insumos
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 rounded-full ${SEMAPHORE_DOT_CLASS[getSocialSemaphore(s)]}`} />
+                            Social
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 1B. VISÃO DIRETOR - LISTA DE ESCOLAS DA REDE */}
+            {roleMode === 'diretor' && activeMobileTab === 'escolas' && (
+              <div className="space-y-3">
+                {/* Municipality Header */}
+                <div className="bg-[#060b19] border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-white flex items-center gap-1.5 truncate">
+                        <span className="truncate">{municipalityConfig.name}</span>
+                        <span className="shrink-0 px-1 py-0.2 bg-sky-950 text-sky-300 text-[8px] font-black border border-sky-800 rounded">
+                          {municipalityConfig.uf}
+                        </span>
+                      </p>
+                      <p className="text-[9px] text-slate-500">Cód. IBGE: {municipalityConfig.inepCode}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('configuracao')}
+                    className="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[10px] font-bold text-slate-300 hover:bg-slate-800 transition flex items-center gap-1"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Trocar</span>
+                  </button>
+                </div>
+
+                {/* Filter Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                  <span className="px-2.5 py-1 rounded-full font-bold bg-sky-500 text-slate-950">2025</span>
+                  <span className="px-2.5 py-1 rounded-full font-bold bg-sky-500 text-slate-950">Municipal</span>
+                  <span className="px-2.5 py-1 rounded-full font-bold bg-slate-900 border border-slate-700 text-slate-400">Pública</span>
+                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-full p-0.5">
+                    {(['todas', 'urbana', 'rural'] as ZoneFilter[]).map((z) => (
+                      <button
+                        key={z}
+                        onClick={() => setZoneFilter(z)}
+                        className={`px-2 py-0.5 rounded-full font-bold capitalize transition ${
+                          zoneFilter === z ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {z}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* School Cards List */}
+                <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                  {filteredSchoolsForZone.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setSelectedSchoolId(s.id);
+                        setActiveMobileTab('resumo');
+                      }}
+                      className={`w-full text-left bg-[#060b19] border p-2.5 rounded-xl space-y-1.5 transition ${
+                        s.id === selectedSchoolId ? 'border-amber-500/60' : 'border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-1.5 py-0.2 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] font-mono font-bold rounded">
+                          INEP {s.code}
+                        </span>
+                        {hasSchoolAlert(s) && (
+                          <span className="px-1.5 py-0.2 bg-rose-950 text-rose-300 text-[9px] font-black rounded border border-rose-800">
+                            Alerta
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-black text-white leading-tight">{s.name}</p>
+                      <p className="text-[10px] text-slate-400 flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                        <span className="truncate">{s.address}</span>
+                      </p>
+                      <div className="flex items-center gap-3 pt-1 border-t border-slate-800/80 text-[9px] text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <span className={`w-2 h-2 rounded-full ${SEMAPHORE_DOT_CLASS[getAprendizadoSemaphore(s)]}`} />
+                          Aprendizado
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className={`w-2 h-2 rounded-full ${SEMAPHORE_DOT_CLASS[getInsumosSemaphore(s)]}`} />
+                          Insumos
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className={`w-2 h-2 rounded-full ${SEMAPHORE_DOT_CLASS[getSocialSemaphore(s)]}`} />
+                          Social
+                        </span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
