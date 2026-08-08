@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2, Database, ShieldCheck, CheckCircle2, Server, ArrowUpRight, Cpu } from 'lucide-react';
+import { Code2, Database, ShieldCheck, CheckCircle2, Server, ArrowUpRight, Cpu, Info } from 'lucide-react';
 
 export const RadarApiIntegrationTab: React.FC = () => {
   const apiConnectors = [
@@ -13,7 +13,7 @@ export const RadarApiIntegrationTab: React.FC = () => {
     },
     {
       name: 'FNDE / SIGPC e SIOPE',
-      status: 'Conectado (Ambiente Homologação)',
+      status: 'Simulado (Ambiente Homologação)',
       description: 'Consulta automática de inadimplência, repasses do PDDE, PNAE, PNATE e transmissão de investimentos.',
       protocol: 'SOAP / REST SIOPE',
       ping: '22ms',
@@ -21,7 +21,7 @@ export const RadarApiIntegrationTab: React.FC = () => {
     },
     {
       name: 'Censo Escolar / INEP',
-      status: 'Sincronizado (Educacenso 2024.2)',
+      status: 'Simulado (Educacenso 2024.2)',
       description: 'Importação automática das contagens oficiais de alunos por turma, etapa e tempo integral.',
       protocol: 'API REST Inep / Batch',
       ping: '8ms',
@@ -50,6 +50,13 @@ export const RadarApiIntegrationTab: React.FC = () => {
           <p className="text-xs text-slate-400 mt-0.5">
             Arquitetura preparada para integração nativa via webservices governamentais com validação automatizada de esquema JSON.
           </p>
+        </div>
+      </div>
+
+      <div className="bg-amber-950/30 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2.5 text-amber-200/90 text-xs leading-relaxed">
+        <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <div>
+          <strong className="font-bold text-amber-300">Ambiente de demonstração:</strong> nenhum conector abaixo está ligado a um webservice governamental real ainda — os status e latências são ilustrativos de como a tela vai se comportar após a integração.
         </div>
       </div>
 

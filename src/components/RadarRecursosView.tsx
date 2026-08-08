@@ -170,9 +170,15 @@ export const RadarRecursosView: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase flex items-center gap-2">
               📡 RADAR DE RECURSOS DA EDUCAÇÃO
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-700/60 flex items-center gap-1">
-              <Database className="w-3 h-3 text-emerald-400" />
-              IndexedDB Offline Sync
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1 ${
+                isIndexedDbSynced
+                  ? 'bg-emerald-950 text-emerald-300 border-emerald-700/60'
+                  : 'bg-rose-950 text-rose-300 border-rose-700/60'
+              }`}
+            >
+              <Database className={`w-3 h-3 ${isIndexedDbSynced ? 'text-emerald-400' : 'text-rose-400'}`} />
+              {isIndexedDbSynced ? 'IndexedDB Offline Sync' : 'IndexedDB Indisponível'}
             </span>
           </div>
           <p className="text-xs text-slate-300 mt-1">

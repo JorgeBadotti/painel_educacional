@@ -67,14 +67,13 @@ export const RadarAiAnalysis: React.FC<Props> = ({ programs, metrics, onNavigate
   const handleGenerateCustomAdvice = async () => {
     setIsGenerating(true);
     try {
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY;
 
       if (!apiKey) {
-        // Fallback simulated executive diagnosis if no direct client key
+        // Fallback simulated executive diagnosis if no key is configured,
+        // built from the same real data as the bullet points above.
         setTimeout(() => {
-          setCustomAiAdvice(
-            `PARECER ESTRATÉGICO DO COCKPIT DE INTELIGÊNCIA:\n\n1. AÇÃO IMEDIATA (48 HORAS): Publicar o Decreto Municipal do Programa Escola em Tempo Integral para destravar o repasse de R$ 850.000,00 antes do vencimento do prazo SIMEC em 12 dias.\n\n2. SANAMENTO DOC (5 DIAS): Notificar a Coordenadoria Financeira para transmissão da certidão de aplicação de 15% em Primeira Infância no SIOPE para garantir o VAAT Fundeb (R$ 1.250.000,00).\n\n3. RISCO CRÍTICO: Credenciar tutores do Programa Brasil na Escola para evitar a suspensão e perda definitiva da cota de R$ 150.000,00 no FNDE.`
-          );
+          setCustomAiAdvice(buildSimulatedAdvice());
           setIsGenerating(false);
         }, 1200);
         return;
@@ -102,12 +101,26 @@ Gere um parecer executivo sucinto (3 parágrafos curtos) em tom altamente profis
       setCustomAiAdvice(response.text || 'Análise gerada com sucesso.');
     } catch (err) {
       console.warn('Gemini client call error, using fallback:', err);
-      setCustomAiAdvice(
-        `PARECER ESTRATÉGICO GERADO PELA IA:\n\n1. Recomenda-se a assinatura imediata do Decreto de Tempo Integral para salvar R$ 850 mil no SIMEC.\n2. Regularizar as contas do PDDE de 2 escolas para reativar o repasse no SIGPC.\n3. O saneamento das pendências aumentará o Índice IAR do município de ${metrics.iarIndex} para 92/100.`
-      );
+      setCustomAiAdvice(buildSimulatedAdvice());
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  // Simulated advice used when no Gemini API key is configured (or the live
+  // call fails), computed from the same real data as the bullets above so it
+  // never contradicts what's shown on screen.
+  const buildSimulatedAdvice = () => {
+    const projectedIar = Math.min(100, metrics.iarIndex + 14);
+    const formattedValue = fullTimeProgram
+      ? `R$ ${new Intl.NumberFormat('pt-BR').format(fullTimeProgram.estimatedValue)}`
+      : 'valor estimado a confirmar';
+
+    return `PARECER ESTRATÉGICO (SIMULADO - configure GEMINI_API_KEY para gerar com IA real):\n\n1. AÇÃO IMEDIATA: ${
+      fullTimeProgram
+        ? `Publicar o Decreto Municipal do ${fullTimeProgram.program} para destravar o repasse de ${formattedValue}.`
+        : 'Priorizar a regularização dos programas com prazo mais próximo do vencimento.'
+    }\n2. SANEAMENTO DOCUMENTAL: Regularizar as pendências em ${docPendingPrograms.length} programa(s) identificados no diagnóstico acima.\n3. IMPACTO NO IAR: A regularização dos programas em risco pode elevar o Índice de Aproveitamento de Recursos de ${metrics.iarIndex} para ${projectedIar} pontos.`;
   };
 
   return (
