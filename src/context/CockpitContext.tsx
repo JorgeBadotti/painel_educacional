@@ -19,6 +19,7 @@ import {
   INITIAL_ACTION_PLANS
 } from '../data/mockData';
 import { PRESET_MUNICIPALITIES, generateSchoolsForMunicipality } from '../data/municipalityPresets';
+import { loadFromLocalStorage, saveToLocalStorage } from '../utils/localStorage';
 
 export type ActiveTab = 'cockpit' | 'escolas' | 'comparativo' | 'planos_acao' | 'alertas' | 'api_integracao' | 'radar_recursos' | 'mobile_escola' | 'configuracao';
 
@@ -67,17 +68,9 @@ interface CockpitContextType {
 const CockpitContext = createContext<CockpitContextType | undefined>(undefined);
 
 export const CockpitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [kpis, setKpis] = useState<KpiIndicator[]>(() => {
-    try {
-      const saved = localStorage.getItem('educacao_kpis_data');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Failed to load KPIs from localStorage', e);
-    }
-    return INITIAL_KPIS;
-  });
+  const [kpis, setKpis] = useState<KpiIndicator[]>(() =>
+    loadFromLocalStorage('educacao_kpis_data', INITIAL_KPIS)
+  );
   const [schools, setSchools] = useState<School[]>(INITIAL_SCHOOLS);
   const [alerts, setAlerts] = useState<AlertItem[]>(INITIAL_ALERTS);
   const [highlights] = useState<PositiveHighlight[]>(INITIAL_HIGHLIGHTS);
@@ -96,17 +89,9 @@ export const CockpitProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [openKpiDetailModal, setOpenKpiDetailModal] = useState<KpiIndicator | null>(null);
   const [isLiveStreaming, setIsLiveStreaming] = useState<boolean>(true);
 
-  const [municipalityConfig, setMunicipalityConfigState] = useState<MunicipalityConfig>(() => {
-    try {
-      const saved = localStorage.getItem('educacao_municipality_config');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Failed to load municipality config from localStorage', e);
-    }
-    return PRESET_MUNICIPALITIES[0];
-  });
+  const [municipalityConfig, setMunicipalityConfigState] = useState<MunicipalityConfig>(() =>
+    loadFromLocalStorage('educacao_municipality_config', PRESET_MUNICIPALITIES[0])
+  );
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: 'Dr. Fernando Vasconcelos',
@@ -117,11 +102,7 @@ export const CockpitProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const setMunicipalityConfig = (config: MunicipalityConfig) => {
     setMunicipalityConfigState(config);
-    try {
-      localStorage.setItem('educacao_municipality_config', JSON.stringify(config));
-    } catch (e) {
-      console.error('Failed to save municipality config to localStorage', e);
-    }
+    saveToLocalStorage('educacao_municipality_config', config);
     // Automatically generate schools for this municipality
     const newSchools = generateSchoolsForMunicipality(config.name);
     setSchools(newSchools);
@@ -186,11 +167,7 @@ export const CockpitProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Persist KPIs to localStorage when updated
   useEffect(() => {
-    try {
-      localStorage.setItem('educacao_kpis_data', JSON.stringify(kpis));
-    } catch (e) {
-      console.error('Failed to save KPIs to localStorage', e);
-    }
+    saveToLocalStorage('educacao_kpis_data', kpis);
   }, [kpis]);
 
   const updateKpiGlidePath = (kpiId: string, monthlyTrajectory: number[], newStrategicTarget?: number) => {
