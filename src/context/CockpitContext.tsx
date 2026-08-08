@@ -67,7 +67,10 @@ interface CockpitContextType {
 
 const CockpitContext = createContext<CockpitContextType | undefined>(undefined);
 
-export const CockpitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CockpitProvider: React.FC<{ children: React.ReactNode; initialUserProfile?: UserProfile }> = ({
+  children,
+  initialUserProfile,
+}) => {
   const [kpis, setKpis] = useState<KpiIndicator[]>(() =>
     loadFromLocalStorage('educacao_kpis_data', INITIAL_KPIS)
   );
@@ -93,12 +96,14 @@ export const CockpitProvider: React.FC<{ children: React.ReactNode }> = ({ child
     loadFromLocalStorage('educacao_municipality_config', PRESET_MUNICIPALITIES[0])
   );
 
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: 'Dr. Fernando Vasconcelos',
-    role: 'Secretário(a) de Educação',
-    email: 'secretario@educacao.gov.br',
-    municipality: municipalityConfig.name,
-  });
+  const [userProfile, setUserProfile] = useState<UserProfile>(
+    initialUserProfile ?? {
+      name: 'Dr. Fernando Vasconcelos',
+      role: 'Secretário(a) de Educação',
+      email: 'secretario@educacao.gov.br',
+      municipality: municipalityConfig.name,
+    }
+  );
 
   const setMunicipalityConfig = (config: MunicipalityConfig) => {
     setMunicipalityConfigState(config);

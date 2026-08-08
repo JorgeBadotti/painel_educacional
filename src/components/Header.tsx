@@ -333,6 +333,7 @@ export const Header: React.FC<{ onOpenAuthModal: () => void }> = ({ onOpenAuthMo
           {/* User Profile */}
           <button
             onClick={onOpenAuthModal}
+            aria-label="Perfil do usuário"
             className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-md transition text-slate-200"
           >
             <UserCheck className="w-3.5 h-3.5 text-amber-400" />

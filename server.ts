@@ -1,15 +1,26 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
+import { registerAuthRoutes, requireAuth } from './server/auth';
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
+// Identity provider shared with the smart-teacher app: its frontend calls
+// /api/auth/* on this server directly (cross-origin), so it needs to be in
+// the allowlist. ALLOWED_ORIGINS is a comma-separated list; unset = same
+// origin only (fine when this server's own frontend is the only caller).
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
+app.use(cors({ origin: allowedOrigins.length > 0 ? allowedOrigins : false }));
+
 app.use(express.json());
+
+registerAuthRoutes(app);
 
 // Lazy-initialized Gemini AI client
 let aiClient: GoogleGenAI | null = null;
@@ -31,7 +42,7 @@ app.get('/api/health', (req, res) => {
 // Generates the Radar de Recursos executive analysis with Gemini. This used
 // to run client-side in RadarAiAnalysis.tsx with GEMINI_API_KEY bridged into
 // the browser bundle; it now runs here so the key never leaves the server.
-app.post('/api/radar-analysis', async (req, res) => {
+app.post('/api/radar-analysis', requireAuth, async (req, res) => {
   try {
     const { programs, metrics } = req.body as {
       programs?: Array<{

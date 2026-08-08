@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { CockpitProvider, useCockpit } from './context/CockpitContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { UserProfile } from './types';
+import { LoginScreen } from './components/LoginScreen';
 import { Header } from './components/Header';
 import { TopKpiCards } from './components/TopKpiCards';
 import { KpiMatrixTable } from './components/KpiMatrixTable';
@@ -127,10 +130,39 @@ function MainCockpitContent() {
   );
 }
 
-export default function App() {
+function AuthGate() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#060b19] flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-wider">
+        Carregando…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  const initialUserProfile: UserProfile = {
+    name: user.name,
+    role: user.role as UserProfile['role'],
+    email: user.email,
+    municipality: user.municipality,
+  };
+
   return (
-    <CockpitProvider>
+    <CockpitProvider initialUserProfile={initialUserProfile}>
       <MainCockpitContent />
     </CockpitProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }

@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   ArrowRight
 } from 'lucide-react';
+import { authFetch } from '../../context/AuthContext';
 
 interface Props {
   programs: EducationResourceProgram[];
@@ -68,7 +69,7 @@ export const RadarAiAnalysis: React.FC<Props> = ({ programs, metrics, onNavigate
   const handleGenerateCustomAdvice = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch('/api/radar-analysis', {
+      const res = await authFetch('/api/radar-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ programs, metrics }),
