@@ -7,19 +7,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Package manager is Bun (`bun.lock` present).
 
 ```bash
-bun install          # install dependencies
-bun run dev           # start Vite dev server on port 3000 (--host=0.0.0.0)
-bun run build          # production build (vite build)
-bun run preview        # preview the production build
-bun run lint            # type-check only: `tsc --noEmit` (no ESLint config in the repo)
-bun run clean            # rm -rf dist
+bun install            # install dependencies
+bun run dev              # tsx server.ts — boots Express with Vite in middleware mode, port 3000
+bun run build              # vite build (client bundle) + esbuild bundles server.ts to dist/server.cjs
+bun run start                # node dist/server.cjs — run the production build
+bun run preview                # vite preview (client-only, no /api routes)
+bun run lint                    # type-check only: `tsc --noEmit` (no ESLint config in the repo)
+bun run clean                    # rm -rf dist server.js
 ```
 
 There is no test framework configured in this repo — do not assume Jest/Vitest exist.
 
 ## Environment
 
-This is a Google AI Studio applet (`metadata.json` declares `MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API`). It runs purely client-side (no backend server): `GEMINI_API_KEY` and `APP_URL` are normally injected by AI Studio's Secrets panel at runtime. For local dev, copy `.env.example` to `.env` and set `GEMINI_API_KEY`. `vite.config.ts` bridges `GEMINI_API_KEY` from `.env` into `process.env.GEMINI_API_KEY` in the client bundle via `define` (only `VITE_`-prefixed vars are exposed by default otherwise) — the key ends up in the shipped browser bundle, which is expected for this AI Studio deployment model but worth keeping in mind when touching `vite.config.ts`.
+This is a Google AI Studio applet (`metadata.json` declares `MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API`). `server.ts` is the single entry point for both dev and prod — an Express process that mounts Vite as middleware in dev and serves `dist/` statically in production (same pattern as sibling repo `smart-teacher`). `GEMINI_API_KEY` is only read server-side (via `dotenv`) and is never bridged into the client bundle. For local dev, copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 
 `DISABLE_HMR=true` turns off Vite's HMR/file-watch (used by the AI Studio agent runtime to avoid flicker during automated edits).
 
@@ -37,7 +38,7 @@ This is a Google AI Studio applet (`metadata.json` declares `MAJOR_CAPABILITY_SE
 
 **Radar de Recursos feature area** (`src/components/radar/*`, tab `radar_recursos`) is the one part of the app with its own persistence and AI integration, independent of `CockpitContext`:
 - `src/utils/indexedDbService.ts` (`RadarIndexedDbService`) persists `EducationResourceProgram` records in browser IndexedDB (`CockpitRadarDB`), seeding from `INITIAL_RADAR_PROGRAMS` (`src/data/radarRecursosData.ts`) on first read and falling back to that same in-memory data if IndexedDB is unavailable.
-- `src/components/radar/RadarAiAnalysis.tsx` is the only place that calls the Gemini API directly from the browser via `@google/genai`'s `GoogleGenAI`.
+- `src/components/radar/RadarAiAnalysis.tsx` calls `POST /api/radar-analysis` (in `server.ts`), which holds the Gemini client and builds the executive-summary prompt server-side; on a failed/non-OK response it falls back to `buildSimulatedAdvice()`, a locally-computed placeholder derived from the same real data so it never contradicts what's on screen.
 
 **PDF export** (`src/utils/pdfExporter.ts`, `exportCockpitPdf`, triggered from `Header.tsx`) builds an executive-summary PDF client-side with `jspdf` from the current KPI/school/alert/action-plan state — it's drawn manually (coordinates/text placement), not generated from a template.
 

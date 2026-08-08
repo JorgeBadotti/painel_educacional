@@ -12,7 +12,6 @@ import {
   ShieldAlert,
   ArrowRight
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 
 interface Props {
   programs: EducationResourceProgram[];
@@ -63,60 +62,42 @@ export const RadarAiAnalysis: React.FC<Props> = ({ programs, metrics, onNavigate
     }
   ];
 
-  // Live Gemini synthesis call
+  // Calls the backend, which holds GEMINI_API_KEY and runs the Gemini
+  // synthesis server-side (see POST /api/radar-analysis in server.ts) —
+  // the key never reaches the browser.
   const handleGenerateCustomAdvice = async () => {
     setIsGenerating(true);
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-
-      if (!apiKey) {
-        // Fallback simulated executive diagnosis if no key is configured,
-        // built from the same real data as the bullet points above.
-        setTimeout(() => {
-          setCustomAiAdvice(buildSimulatedAdvice());
-          setIsGenerating(false);
-        }, 1200);
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      const promptText = `Você é o Consultor Chefe de Inteligência Financeira Educacional para Secretarias Municipais do Brasil.
-Com base nos dados abaixo do município:
-- Total de Programas: ${programs.length}
-- Valor Potencial Total: R$ ${metrics.totalPotentialValue}
-- Programas com Prazo em < 15 dias: ${urgentPrograms.map(p => p.program).join(', ')}
-- Programas em Risco/Pendentes: ${docPendingPrograms.map(p => p.program).join(', ')}
-- Pontuação IAR Atual: ${metrics.iarIndex}/100
-
-Gere um parecer executivo sucinto (3 parágrafos curtos) em tom altamente profissional e objetivo com:
-1. Recomendação prioritária para o Secretário de Educação
-2. Plano de saneamento documental de curto prazo
-3. Estimativa de impacto financeiro no orçamento municipal.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: promptText,
+      const res = await fetch('/api/radar-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ programs, metrics }),
       });
 
-      setCustomAiAdvice(response.text || 'Análise gerada com sucesso.');
+      if (!res.ok) {
+        throw new Error(`Falha na análise (HTTP ${res.status})`);
+      }
+
+      const data = await res.json();
+      setCustomAiAdvice(data.text || 'Análise gerada com sucesso.');
     } catch (err) {
-      console.warn('Gemini client call error, using fallback:', err);
+      console.warn('Radar analysis API call failed, using fallback:', err);
       setCustomAiAdvice(buildSimulatedAdvice());
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Simulated advice used when no Gemini API key is configured (or the live
-  // call fails), computed from the same real data as the bullets above so it
-  // never contradicts what's shown on screen.
+  // Simulated advice used when the backend call fails (e.g. GEMINI_API_KEY
+  // not configured on the server), computed from the same real data as the
+  // bullets above so it never contradicts what's shown on screen.
   const buildSimulatedAdvice = () => {
     const projectedIar = Math.min(100, metrics.iarIndex + 14);
     const formattedValue = fullTimeProgram
       ? `R$ ${new Intl.NumberFormat('pt-BR').format(fullTimeProgram.estimatedValue)}`
       : 'valor estimado a confirmar';
 
-    return `PARECER ESTRATÉGICO (SIMULADO - configure GEMINI_API_KEY para gerar com IA real):\n\n1. AÇÃO IMEDIATA: ${
+    return `PARECER ESTRATÉGICO (SIMULADO - configure GEMINI_API_KEY no servidor para gerar com IA real):\n\n1. AÇÃO IMEDIATA: ${
       fullTimeProgram
         ? `Publicar o Decreto Municipal do ${fullTimeProgram.program} para destravar o repasse de ${formattedValue}.`
         : 'Priorizar a regularização dos programas com prazo mais próximo do vencimento.'
