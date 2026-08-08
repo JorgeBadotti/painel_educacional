@@ -84,11 +84,14 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Includes 'Professor(a)' because this app is also the identity provider
+// for the sibling smart-teacher app, whose users are teachers.
 const VALID_ROLES = [
   'Secretário(a) de Educação',
   'Diretor(a) Escolar',
   'Coordenador(a) Pedagógico(a)',
   'Técnico(a) de TI',
+  'Professor(a)',
 ];
 
 export function registerAuthRoutes(app: Express) {

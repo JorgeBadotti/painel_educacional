@@ -7,6 +7,7 @@ const ROLE_OPTIONS = [
   'Diretor(a) Escolar',
   'Coordenador(a) Pedagógico(a)',
   'Técnico(a) de TI',
+  'Professor(a)',
 ];
 
 export const LoginScreen: React.FC = () => {
@@ -138,7 +139,7 @@ export const LoginScreen: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-400 uppercase font-bold mb-1">Município</label>
+                <label className="block text-[10px] text-slate-400 uppercase font-bold mb-1">Município / Escola</label>
                 <div className="relative">
                   <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input

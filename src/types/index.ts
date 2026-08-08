@@ -104,7 +104,7 @@ export interface ActionPlan {
 
 export interface UserProfile {
   name: string;
-  role: 'Secretário(a) de Educação' | 'Diretor(a) Escolar' | 'Coordenador(a) Pedagógico(a)' | 'Técnico(a) de TI';
+  role: 'Secretário(a) de Educação' | 'Diretor(a) Escolar' | 'Coordenador(a) Pedagógico(a)' | 'Técnico(a) de TI' | 'Professor(a)';
   email: string;
   municipality: string;
 }
